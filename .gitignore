@@ -1,0 +1,16 @@
+# OS X specific
+**/.DS_Store
+
+# VS Code
+**/.vscode/*
+
+# ccache
+**/.cache/*
+
+# clangd
+build.out
+compile_commands.json
+
+# cache simualtion
+**/build/*
+cacheSim
