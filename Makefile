@@ -5,8 +5,8 @@ TARGET := cacheSim
 
 ################################################################################
 # Compiler and Linker Options
-export CXX := clang++
-export CXXFLAGS := -Wall -std=c++17
+export CXX := g++
+export CXXFLAGS := -Wall -std=c++11
 
 export LD := $(CXX)
 export LD_FLAGS :=
