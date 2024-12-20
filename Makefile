@@ -19,7 +19,7 @@ export LD_FLAGS :=
 #   of the output.  But, allow a user to see the full makefile output when this
 #   option is specified.
 ifneq ($(VERBOSE), 1)
-    brief = @echo "[$(patsubst $(OBJ_DIR)/%,%,$(@))]";
+    brief = @echo "[$(patsubst $(subst $(ROOT)/,,$(OBJ_DIR))/%,%,$(@))]";
     verb = @
 else
     brief = @echo "";
