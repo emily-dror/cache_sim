@@ -1,5 +1,7 @@
 #include "arg_parser.hpp"
 
+#include "logging.hpp"
+
 #include <cstring>
 #include <iostream>
 #include <string>
@@ -15,7 +17,7 @@ void argument_parser_c::add_argument(const std::string &name, const std::string 
     arguments[name] = {description, "", required};
 }
 
-void argument_parser_c::parse(int argc, char *argv[])
+int argument_parser_c::parse(int argc, char *argv[])
 {
     unsigned pos_arg = 1;
     for (int i = 1; i < argc; ++i) {
@@ -32,18 +34,33 @@ void argument_parser_c::parse(int argc, char *argv[])
         }
     }
 
+    //  log command line arguments
+    LOG(DEBUG, "Input file: %s\n", get("#1").c_str());
+    LOG(DEBUG, "Memory cycles: %s\n", get("--mem-cyc").c_str());
+    LOG(DEBUG, "Block size: %s\n", get("--bsize").c_str());
+    LOG(DEBUG, "Write Allocate policy: %s\n", get("--wr-alloc").c_str());
+    LOG(DEBUG, "L1 size: %s\n", get("--l1-size").c_str());
+    LOG(DEBUG, "L1 associativity: %s\n", get("--l1-assoc").c_str());
+    LOG(DEBUG, "L1 cycles: %s\n", get("--l1-cyc").c_str());
+    LOG(DEBUG, "L2 size: %s\n", get("--l2-size").c_str());
+    LOG(DEBUG, "L2 associativity: %s\n", get("--l2-assoc").c_str());
+    LOG(DEBUG, "L2 cycles: %s\n", get("--l2-cyc").c_str());
+
     // Check required arguments
     for (const auto &entry : arguments) {
         if (entry.second.required && entry.second.value.empty()) {
-            throw std::invalid_argument("Missing required argument: " + entry.first);
+            std::cerr << "Missing required argument: " << entry.first << "\n";
+            print_help();
+            return 1;
         }
     }
+    return 0;
 }
 
 std::string argument_parser_c::get(const std::string &name) const
 {
     if (arguments.find(name) == arguments.end()) {
-        throw std::invalid_argument("Argument not found: " + name);
+        return "(null)";
     }
     return arguments.at(name).value;
 }

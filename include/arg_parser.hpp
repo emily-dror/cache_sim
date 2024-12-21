@@ -9,7 +9,7 @@ class argument_parser_c
 public:
     argument_parser_c(const std::string &prog_name);
     void print_help() const;
-    void parse(int argc, char *argv[]);
+    int parse(int argc, char *argv[]);
     bool is_present(const std::string &name) const;
     std::string get(const std::string &name) const;
 

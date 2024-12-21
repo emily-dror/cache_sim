@@ -1,6 +1,6 @@
 #include "arg_parser.hpp"
+#include "logging.hpp"
 
-#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -8,6 +8,11 @@
 int main(int argc, char **argv)
 {
     argument_parser_c parser("Cache Simulation");
+
+    // General arguments
+    parser.add_argument("--logging", "Logging type", false);
+
+    // Cache specific arguments
     parser.add_argument("#1", "Path to the input file", true);
     parser.add_argument("--mem-cyc", "Number of memory cycles", true);
     parser.add_argument("--bsize", "Block size (log2)", true);
@@ -17,27 +22,17 @@ int main(int argc, char **argv)
     parser.add_argument("--l2-size", "L2 cache size (log2)", true);
     parser.add_argument("--l2-assoc", "L2 associativity (log2(# of ways))", true);
     parser.add_argument("--l2-cyc", "L2 cache cycles", true);
-    parser.add_argument("--wr-alloc", "Write Allocate policy (0: No Write Allocate, 1: Write Allocate)", true);
+    parser.add_argument("--wr-alloc",
+                        "Write Allocate policy (0: No Write Allocate, 1: Write Allocate)", true);
 
-    try {
-        parser.parse(argc, argv);
-
-        std::cout << "Input file: " << parser.get("#1") << "\n";
-        std::cout << "Memory cycles: " << parser.get("--mem-cyc") << "\n";
-        std::cout << "Block size: " << parser.get("--bsize") << "\n";
-        std::cout << "Write Allocate policy: " << parser.get("--wr-alloc") << "\n";
-        std::cout << "L1 size: " << parser.get("--l1-size") << "\n";
-        std::cout << "L1 associativity: " << parser.get("--l1-assoc") << "\n";
-        std::cout << "L1 cycles: " << parser.get("--l1-cyc") << "\n";
-        std::cout << "L2 size: " << parser.get("--l2-size") << "\n";
-        std::cout << "L2 associativity: " << parser.get("--l2-assoc") << "\n";
-        std::cout << "L2 cycles: " << parser.get("--l2-cyc") << "\n";
-
-    } catch (const std::exception& e) {
-        std::cerr << e.what() << "\n";
-        parser.print_help();
+    // Parse command line arguments
+    if (parser.parse(argc, argv)) {
         return 1;
     }
+
+    // Initialize logger
+    auto &logger = logger_c::get_instance();
+    logger.set_log_level(parser.get("--logging"));
 
     // declare sim var to enable multiple sims
     //
