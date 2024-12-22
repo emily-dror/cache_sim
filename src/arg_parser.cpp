@@ -1,7 +1,5 @@
 #include "arg_parser.hpp"
 
-#include "logging.hpp"
-
 #include <cstring>
 #include <iostream>
 #include <string>
@@ -33,18 +31,6 @@ int argument_parser_c::parse(int argc, char *argv[])
             arguments["#" + std::to_string(pos_arg++)].value = argv[i];
         }
     }
-
-    //  log command line arguments
-    LOG(DEBUG, "Input file: %s\n", get("#1").c_str());
-    LOG(DEBUG, "Memory cycles: %s\n", get("--mem-cyc").c_str());
-    LOG(DEBUG, "Block size: %s\n", get("--bsize").c_str());
-    LOG(DEBUG, "Write Allocate policy: %s\n", get("--wr-alloc").c_str());
-    LOG(DEBUG, "L1 size: %s\n", get("--l1-size").c_str());
-    LOG(DEBUG, "L1 associativity: %s\n", get("--l1-assoc").c_str());
-    LOG(DEBUG, "L1 cycles: %s\n", get("--l1-cyc").c_str());
-    LOG(DEBUG, "L2 size: %s\n", get("--l2-size").c_str());
-    LOG(DEBUG, "L2 associativity: %s\n", get("--l2-assoc").c_str());
-    LOG(DEBUG, "L2 cycles: %s\n", get("--l2-cyc").c_str());
 
     // Check required arguments
     for (const auto &entry : arguments) {

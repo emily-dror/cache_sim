@@ -1,115 +1,55 @@
-#include "arg_parser.hpp"
-#include "cache.hpp"
+#include "sim.hpp"
+
 #include "logging.hpp"
 
 #include <fstream>
 #include <iostream>
-#include <sstream>
 
-int main(int argc, char **argv)
+sim_c::sim_c(const sim_config_s &config)
+    : l1(L1_CACHE, config.l1_size, config.l1_assoc, config.blk_size)
+    , l2(L2_CACHE, config.l2_size, config.l2_assoc, config.blk_size)
+    , logger("SIM", config.log_type)
 {
-    argument_parser_c parser("Cache Simulation");
-    parser.add_argument("--logging", "Logging type", false);
-    parser.add_argument("#1", "Path to the input file", true);
-    parser.add_argument("--mem-cyc", "Number of memory cycles", true);
-    parser.add_argument("--bsize", "Block size (log2)", true);
-    parser.add_argument("--l1-size", "L1 cache size (log2)", true);
-    parser.add_argument("--l1-assoc", "L1 associativity (log2(# of ways))", true);
-    parser.add_argument("--l1-cyc", "L1 cache cycles", true);
-    parser.add_argument("--l2-size", "L2 cache size (log2)", true);
-    parser.add_argument("--l2-assoc", "L2 associativity (log2(# of ways))", true);
-    parser.add_argument("--l2-cyc", "L2 cache cycles", true);
-    parser.add_argument("--wr-alloc",
-                        "Write Allocate policy (0: No Write Allocate, 1: Write Allocate)", true);
+}
 
-    if (parser.parse(argc, argv)) {
-        return 1;
-    }
+sim_c::~sim_c() {}
 
-    // Initialize logger
-    auto &logger = logger_c::get_instance();
-    logger.set_log_level(parser.get("--logging"));
-
-    int blk_size = std::stoi(parser.get("--bsize"));
-    int l1_size = std::stoi(parser.get("--l1-size"));
-    int l1_assoc = std::stoi(parser.get("--l1-assoc"));
-    int l1_sets = l1_size - l1_assoc - blk_size;
-    cache_c tmp((1 << l1_sets), (1 << l1_assoc));
-
-
-    // cache_c tmp(12, 5);
-    std::cout << tmp.lines.size() << std::endl;
-    for (const std::vector<cache_c::cache_line_s> &set : tmp.lines) {
-        std::cout << set.size() << ": ";
-        for (const cache_c::cache_line_s &tag : set) {
-            std::cout << tag.valid;
-        }
-        std::cout << std::endl;
-    }
-
-    // declare sim var to enable multiple sims
-    //
-    // parse command line
-    //
-    // Initialize sim's paramaters
-    //
-    // Run the simulation
-    //
-    //      input file --> next inst. --> pass to L1 --> hit/miss?
-    //      --> if hit continue --> else pass to L2 --> hit/miss?
-    //      --> if hit continue --> if miss wait for main memory
-    //
-    // Get sim's stats.
-
-    if (argc < 19) {
-        std::cerr << "Not enough arguments" << std::endl;
-        return 0;
-    }
-
-    // Get input arguments
-
-    // File
-    // Assuming it is the first argument
-    std::ifstream file(parser.get("#1"));  // input file stream
-    std::string line;
-    if (!file || !file.good()) {
-        // File doesn't exist or some other error
+void sim_c::run(const std::string &trace_path)
+{
+    std::ifstream tracer(trace_path);
+    if (!tracer || !tracer.good()) {
         std::cerr << "File not found" << std::endl;
-        return 0;
+        return;
     }
 
-    while (getline(file, line)) {
-        std::stringstream ss(line);
-        std::string address;
-        char operation = 0;  // read (R) or write (W)
-        if (!(ss >> operation >> address)) {
-            // Operation appears in an Invalid format
+    double l1_miss = 0, l1_access = 0, l2_miss = 0, l2_access = 0;
+    std::string line;
+    while (getline(tracer, line)) {
+        char op = line[0];
+        if ((op != 'r' && op != 'w') || (line.substr(1, 3) != " 0x")) {
             std::cout << "Command Format error" << std::endl;
-            return 0;
+            return;
         }
 
-        // DEBUG - remove this line
-        std::cout << "operation: " << operation;
+        unsigned long addr = strtoul(line.substr(4).c_str(), NULL, 16);
+        LOG(DEBUG, "op: %c address (hex) %lx (dec) %lu\n", op, addr, addr);
 
-        std::string cutAddress = address.substr(2);  // Removing the "0x" part of the address
+        ++l1_access;
+        if (l1.process_access(op, addr)) {
+            continue;
+        }
 
-        // DEBUG - remove this line
-        std::cout << ", address (hex)" << cutAddress;
+        ++l1_miss;
+        ++l2_access;
+        if (l2.process_access(op, addr)) {
+            continue;
+        }
 
-        unsigned long int num = 0;
-        num                   = strtoul(cutAddress.c_str(), NULL, 16);
-
-        // DEBUG - remove this line
-        std::cout << " (dec) " << num << std::endl;
+        ++l2_miss;
     }
 
-    double L1MissRate = 0.0;
-    double L2MissRate = 0.0;
-    double avgAccTime = 0.0;
+    double L1MissRate = l1_access ? (l1_miss / l1_access) : 0.0,
+           L2MissRate = l2_access ? (l2_miss / l2_access) : 0.0, avgAccTime = 0.0;
 
-    printf("L1miss=%.03f ", L1MissRate);
-    printf("L2miss=%.03f ", L2MissRate);
-    printf("AccTimeAvg=%.03f\n", avgAccTime);
-
-    return 0;
+    printf("L1miss=%.03f L2miss=%.03f AccTimeAvg=%.03f\n", L1MissRate, L2MissRate, avgAccTime);
 }

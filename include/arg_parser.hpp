@@ -1,6 +1,7 @@
 #ifndef ARG_PARSER_HPP
 #define ARG_PARSER_HPP
 
+#include <cstdint>
 #include <map>
 #include <string>
 

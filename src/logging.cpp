@@ -1,40 +1,42 @@
 #include "logging.hpp"
 
 #include <cstdarg>
+#include <cstdint>
 #include <cstdio>
+#include <cstring>
 
-logger_c::logger_c()
-    : log_level(0)
+logger_c::logger_c(const char *name, uint8_t log_level)
+    : name(name)
+    , log_level(log_level)
 {
 }
 
 logger_c::~logger_c() {}
 
-logger_c &logger_c::get_instance()
+uint8_t logger_c::get_log_type(const std::string &arg)
 {
-    static logger_c instance;
-    return instance;
-}
-
-void logger_c::set_log_level(const std::string &arg)
-{
+    uint8_t retval = 0;
     if (arg.find("debug") != std::string::npos) {
-        log_level |= DEBUG;
+        retval |= DEBUG;
     }
 
     if (arg.find("l1_cache") != std::string::npos) {
-        log_level |= L1_CACHE;
+        retval |= L1_CACHE;
     }
 
     if (arg.find("l2_cache") != std::string::npos) {
-        log_level |= L2_CACHE;
+        retval |= L2_CACHE;
     }
+    return retval;
 }
 
-void logger_c::proxy_log(log_level_t level, const char *fmt, ...)
+void logger_c::proxy_log(uint8_t level, const char *fmt, ...)
 {
     if (!(level & log_level)) {
         return;
+    }
+    if (strlen(name)) {
+        fprintf(stdout, "%s: ", name);
     }
 
     va_list arg;
