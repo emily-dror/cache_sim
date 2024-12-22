@@ -1,4 +1,5 @@
 #include "arg_parser.hpp"
+#include "cache.hpp"
 #include "logging.hpp"
 
 #include <fstream>
@@ -8,11 +9,7 @@
 int main(int argc, char **argv)
 {
     argument_parser_c parser("Cache Simulation");
-
-    // General arguments
     parser.add_argument("--logging", "Logging type", false);
-
-    // Cache specific arguments
     parser.add_argument("#1", "Path to the input file", true);
     parser.add_argument("--mem-cyc", "Number of memory cycles", true);
     parser.add_argument("--bsize", "Block size (log2)", true);
@@ -25,7 +22,6 @@ int main(int argc, char **argv)
     parser.add_argument("--wr-alloc",
                         "Write Allocate policy (0: No Write Allocate, 1: Write Allocate)", true);
 
-    // Parse command line arguments
     if (parser.parse(argc, argv)) {
         return 1;
     }
@@ -33,6 +29,23 @@ int main(int argc, char **argv)
     // Initialize logger
     auto &logger = logger_c::get_instance();
     logger.set_log_level(parser.get("--logging"));
+
+    int blk_size = std::stoi(parser.get("--bsize"));
+    int l1_size = std::stoi(parser.get("--l1-size"));
+    int l1_assoc = std::stoi(parser.get("--l1-assoc"));
+    int l1_sets = l1_size - l1_assoc - blk_size;
+    cache_c tmp((1 << l1_sets), (1 << l1_assoc));
+
+
+    // cache_c tmp(12, 5);
+    std::cout << tmp.lines.size() << std::endl;
+    for (const std::vector<cache_c::cache_line_s> &set : tmp.lines) {
+        std::cout << set.size() << ": ";
+        for (const cache_c::cache_line_s &tag : set) {
+            std::cout << tag.valid;
+        }
+        std::cout << std::endl;
+    }
 
     // declare sim var to enable multiple sims
     //
