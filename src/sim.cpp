@@ -6,11 +6,12 @@
 #include <iostream>
 
 sim_c::sim_c(const sim_config_s &config)
-    : l1(L1_CACHE, config.l1_size, config.l1_assoc, config.blk_size)
-    , l2(L2_CACHE, config.l2_size, config.l2_assoc, config.blk_size)
+    : l1(L1_CACHE, config.l1_size, config.l1_assoc, config.blk_size, config.wr_alloc)
+    , l2(L2_CACHE, config.l2_size, config.l2_assoc, config.blk_size, config.wr_alloc)
     , logger("SIM", config.log_type)
 {
 }
+
 
 sim_c::~sim_c() {}
 
@@ -22,7 +23,7 @@ void sim_c::run(const std::string &trace_path)
         return;
     }
 
-    double l1_miss = 0, l1_access = 0, l2_miss = 0, l2_access = 0;
+    double l1_miss = 0, l1_access = 0, l2_miss = 0, l2_access = 0, total_access_time = 0;
     std::string line;
     while (getline(tracer, line)) {
         char op = line[0];
@@ -36,20 +37,23 @@ void sim_c::run(const std::string &trace_path)
 
         ++l1_access;
         if (l1.process_access(op, addr)) {
+            total_access_time += config.l1_cyc;
             continue;
         }
 
         ++l1_miss;
         ++l2_access;
         if (l2.process_access(op, addr)) {
+            total_access_time += config.l2_cyc;
             continue;
         }
 
         ++l2_miss;
+        total_access_time += config.l2_cyc + config.mem_cyc;
     }
 
     double L1MissRate = l1_access ? (l1_miss / l1_access) : 0.0,
-           L2MissRate = l2_access ? (l2_miss / l2_access) : 0.0, avgAccTime = 0.0;
+           L2MissRate = l2_access ? (l2_miss / l2_access) : 0.0, avg_access_time = total_access_time / l1_access;
+    printf("L1miss=%.03f L2miss=%.03f AccTimeAvg=%.03f\n", L1MissRate, L2MissRate, avg_access_time);
 
-    printf("L1miss=%.03f L2miss=%.03f AccTimeAvg=%.03f\n", L1MissRate, L2MissRate, avgAccTime);
 }
