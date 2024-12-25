@@ -7,7 +7,7 @@
 class cache_c
 {
 public:
-    cache_c(uint8_t log, uint32_t size, uint32_t assoc, uint32_t blk);
+    cache_c(uint8_t log, uint32_t size, uint32_t assoc, uint32_t blk, uint8_t wr_alloc);
     cache_c(cache_c &&)                 = default;
     cache_c(const cache_c &)            = default;
     cache_c &operator=(cache_c &&)      = default;
@@ -27,6 +27,7 @@ private:
     uint8_t log;
     uint32_t blk;
     uint32_t sets;
+    uint8_t wr_alloc;
     std::vector<std::vector<cache_line_s>> lines;
 };
 

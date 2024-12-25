@@ -9,6 +9,9 @@ sim_c::sim_c(const sim_config_s &config)
     : l1(L1_CACHE, config.l1_size, config.l1_assoc, config.blk_size, config.wr_alloc)
     , l2(L2_CACHE, config.l2_size, config.l2_assoc, config.blk_size, config.wr_alloc)
     , logger("SIM", config.log_type)
+    , l1_cyc(config.l1_cyc)
+    , l2_cyc(config.l2_cyc)
+    , mem_cyc(config.mem_cyc)
 {
 }
 
@@ -37,19 +40,19 @@ void sim_c::run(const std::string &trace_path)
 
         ++l1_access;
         if (l1.process_access(op, addr)) {
-            total_access_time += config.l1_cyc;
+            total_access_time += l1_cyc;
             continue;
         }
 
         ++l1_miss;
         ++l2_access;
         if (l2.process_access(op, addr)) {
-            total_access_time += config.l2_cyc;
+            total_access_time += l2_cyc;
             continue;
         }
 
         ++l2_miss;
-        total_access_time += config.l2_cyc + config.mem_cyc;
+        total_access_time += l2_cyc + mem_cyc;
     }
 
     double L1MissRate = l1_access ? (l1_miss / l1_access) : 0.0,

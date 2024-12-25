@@ -36,6 +36,9 @@ private:
     cache_c l1;
     cache_c l2;
     logger_c logger;
+    uint32_t l1_cyc;
+    uint32_t l2_cyc;
+    uint32_t mem_cyc;
 };
 
 #endif  // SIM_HPP
