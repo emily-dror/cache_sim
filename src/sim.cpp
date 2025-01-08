@@ -56,7 +56,8 @@ void sim_c::run(const std::string &trace_path)
     }
 
     double L1MissRate = l1_access ? (l1_miss / l1_access) : 0.0,
-           L2MissRate = l2_access ? (l2_miss / l2_access) : 0.0, avg_access_time = total_access_time / l1_access;
+           L2MissRate = l2_access ? (l2_miss / l2_access) : 0.0,
+           avg_access_time = total_access_time / l1_access;
     printf("L1miss=%.03f L2miss=%.03f AccTimeAvg=%.03f\n", L1MissRate, L2MissRate, avg_access_time);
 
 }
