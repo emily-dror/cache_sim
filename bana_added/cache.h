@@ -24,11 +24,11 @@ private:
     int blockSize;
     int associativity;
     int numSets;
-    std::vector<std::vector<CacheLine>> sets;
+    std::vector<std::vector<CacheLine> > sets;
     int accessTime;
     int hits;
     int misses;
-    std::vector<std::list<int>> lruLists;
+    std::vector<std::list<int> > lruLists;
 
     int getIndex(int address);
     int getTag(int address);

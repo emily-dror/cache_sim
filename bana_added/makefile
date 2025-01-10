@@ -12,6 +12,7 @@
 
 # Compiler to use
 CXX := g++
+export CXXFLAGS := -Wall -std=c++11
 
 # Source files
 SRCS := cacheSim.cpp cache.cpp
